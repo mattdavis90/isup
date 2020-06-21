@@ -1,0 +1,51 @@
+{
+package jobparser
+}
+
+Input <- Expression EOF
+
+Expression <- _ term:Term rest:( _ Operator _ Term )* {
+    terms := make([]Term, 0)
+    restSlice := rest.([]interface{})
+
+    terms = append(terms, term.(Term))
+
+    for _, v := range restSlice {
+        vSlice := v.([]interface{})
+
+        operator := vSlice[1].(string)
+        term := vSlice[3].(Term)
+
+        term.Operator = operator
+        terms = append(terms, term)
+    }
+
+    return Expression{
+        Terms:   terms,
+    }, nil
+}
+
+Term <- "(" expression:Expression ")" {
+    return Term{
+        Statement: expression.(Evaluatable),
+    }, nil
+} / variable:Variable {
+    return Term{
+        Statement: variable.(Evaluatable),
+    }, nil
+}
+
+Variable <- variable:VarChars+ {
+    return Variable{
+        Name: string(c.text),
+    }, nil
+}
+
+Operator <- ("&&" / "||") {
+    return string(c.text), nil
+}
+
+VarChars <- [a-z_]
+_ "whitespace" <- [ \t\r\n]*
+
+EOF <- !.

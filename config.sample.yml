@@ -1,0 +1,46 @@
+schedule:
+  jobs:
+    Local:
+      interval: 5s
+      tests:
+        get:
+          request:
+            url: https://reqbin.com/echo/get/json
+          response:
+            extract:
+              success: success
+          ok: status_code == 200 && success == "true"
+        post:
+          request:
+            method: post
+            url: https://reqbin.com/echo/post/json
+            queryparams:
+              test: "1"
+            headers:
+              Content-Type: application/json
+            body: |-
+              {
+                "login": "login",
+                "password": "password"
+              }
+          response:
+            extract:
+              success: success
+          ok: status_code == 200 && success == "true"
+      ok: get && post
+
+alerters:
+  Pushover:
+    default: true
+    request:
+      method: POST
+      url: https://api.pushover.net/1/messages.json
+      headers:
+        Content-Type: application/json
+      body: |-
+        {
+          "token": "{{.TOKEN}}",
+          "user": "{{.USER_TOKEN}}",
+          "title": "{{.Job}}",
+          "message": "{{.State}}"
+        }

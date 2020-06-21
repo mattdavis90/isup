@@ -1,0 +1,6 @@
+Dockerfile
+.git
+.gitignore
+.dockerignore
+config.sample.yml
+serv.py

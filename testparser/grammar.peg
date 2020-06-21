@@ -1,0 +1,92 @@
+{
+package testparser
+}
+
+Input <- Expression EOF
+
+Expression <- _ term:Term rest:( _ Operator _ Term )* {
+    terms := make([]Term, 0)
+    restSlice := rest.([]interface{})
+
+    terms = append(terms, term.(Term))
+
+    for _, v := range restSlice {
+        vSlice := v.([]interface{})
+
+        operator := vSlice[1].(string)
+        term := vSlice[3].(Term)
+
+        term.Operator = operator
+        terms = append(terms, term)
+    }
+
+    return Expression{
+        Terms:   terms,
+    }, nil
+}
+
+Term <- "(" expression:Expression ")" {
+    return Term{
+        Statement: expression.(Evaluatable),
+    }, nil
+} / comparison:Comparison {
+    return Term{
+        Statement: comparison.(Evaluatable),
+    }, nil
+}
+
+Comparison <- _ variable:Variable _ comparator:StrComparator _ value:String {
+    return Comparison{
+        Variable:   variable.(string),
+        Comparator: comparator.(string),
+        IsString:   true,
+        StrValue:   value.(string),
+    }, nil
+} / _ variable:Variable _ comparator:NumComparator _ value:Number {
+    return Comparison{
+        Variable:   variable.(string),
+        Comparator: comparator.(string),
+        IsString:   false,
+        NumValue:   value.(float64),
+    }, nil
+}
+
+StrComparator <- ("==" / "!=") {
+    return string(c.text), nil
+}
+
+NumComparator <- (StrComparator / ">=" / ">" / "<=" / "<") {
+    return string(c.text), nil
+}
+
+Variable <- variable:VarChars+ {
+    return string(c.text), nil
+}
+
+Operator <- ("&&" / "||") {
+    return string(c.text), nil
+}
+
+Number <- '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
+    return strconv.ParseFloat(string(c.text), 64)
+}
+
+String <- '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
+    c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
+    return strconv.Unquote(string(c.text))
+}
+
+Integer <- '0' / NonZeroDecimalDigit DecimalDigit*
+Exponent <- 'e'i [+-]? DecimalDigit+
+VarChars <- [a-z_]
+EscapedChar <- [\x00-\x1f"\\]
+EscapeSequence <- SingleCharEscape / UnicodeEscape
+SingleCharEscape <- ["\\/bfnrt]
+UnicodeEscape <- 'u' HexDigit HexDigit HexDigit HexDigit
+DecimalDigit <- [0-9]
+NonZeroDecimalDigit <- [1-9]
+HexDigit <- [0-9a-f]i
+Bool <- "true" { return true, nil } / "false" { return false, nil }
+_ "whitespace" <- [ \t\r\n]*
+
+EOF <- !.
