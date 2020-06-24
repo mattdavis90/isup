@@ -1,0 +1,21 @@
+name: Build Docker Image
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      name: Check out code
+      
+    - uses: mr-smithers-excellent/docker-build-push@v3
+      name: Build & push Docker image
+      with:
+        image: mattdavis90/isup
+        registry: docker.pkg.github.com
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }} 
