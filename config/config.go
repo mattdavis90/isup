@@ -13,55 +13,62 @@ type Config struct {
 	filename string
 	Schedule scheduler.Schedule
 	Alerters map[string]*scheduler.Alerter
+	Client   *Client
 }
 
-func (c *Config) Check() error {
+func (c *Config) Check() (*Config, error) {
 	log.Info().Msg("Checking config")
 
 	alerterNames := make([]string, 0, len(c.Alerters))
 	for n, a := range c.Alerters {
 		err := a.Check()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		alerterNames = append(alerterNames, n)
 	}
 
 	err := c.Schedule.Check(alerterNames)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	if c.Client == nil {
+		c.Client = NewClient()
+	} else {
+		err = c.Client.Check()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
 }
 
-func (c *Config) Reload() error {
+func (c *Config) Reload() (*Config, error) {
 	data, err := ioutil.ReadFile(c.filename)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	var cfg Config
-	err = yaml.Unmarshal([]byte(data), &cfg)
+	cfg := &Config{}
+	err = yaml.Unmarshal([]byte(data), cfg)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = cfg.Check()
+	cfg, err = cfg.Check()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	c.Schedule = cfg.Schedule
-	c.Alerters = cfg.Alerters
-	return nil
+	return cfg, nil
 }
 
 func LoadConfig(filename string) (*Config, error) {
-	cfg := Config{
+	cfg := &Config{
 		filename: filename,
 	}
 
-	err := cfg.Reload()
-	return &cfg, err
+	return cfg.Reload()
 }

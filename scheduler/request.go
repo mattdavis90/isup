@@ -101,7 +101,7 @@ func (r *Request) Run(ctx context.Context, repl *Replacement) (*http.Response, e
 		req.Header.Add(k, v)
 	}
 
-	client := &http.Client{}
+	client := ctx.Value("http.client").(http.Client)
 	req = req.WithContext(ctx)
 	return client.Do(req)
 }

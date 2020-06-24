@@ -57,12 +57,18 @@ func (a *Alerter) Run(name string, ctx context.Context, alerts chan Alert) {
 				}
 
 				resp, err := a.Request.Run(ctx, &repl)
-				if err != nil || resp.StatusCode < 200 || resp.StatusCode > 200 {
+				if err != nil {
+					log.Warn().
+						Str("alerter", name).
+						Str("job", alert.Job).
+						Err(err).
+						Msg("Alert errorer")
+
+				} else if resp.StatusCode < 200 || resp.StatusCode > 200 {
 					log.Warn().
 						Str("alerter", name).
 						Str("job", alert.Job).
 						Int("status_code", resp.StatusCode).
-						Err(err).
 						Msg("Alert failed to send")
 				} else {
 					log.Info().

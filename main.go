@@ -95,10 +95,11 @@ func run(c *cli.Context) error {
 			return nil
 		case <-sigReload:
 			log.Info().Msg("Reloading config")
-			err := cfg.Reload()
+			newCfg, err := cfg.Reload()
 			if err != nil {
 				log.Error().Err(err).Msg("Could not reload config")
 			} else {
+				cfg = newCfg
 				log.Info().Msg("Config reloaded successfully")
 				cancel()
 				cancel = startScheduler(cfg)
@@ -109,6 +110,7 @@ func run(c *cli.Context) error {
 
 func startScheduler(cfg *config.Config) context.CancelFunc {
 	ctx, cancel := context.WithCancel(context.Background())
+	ctx = context.WithValue(ctx, "http.client", cfg.Client.HttpClient())
 
 	r := scheduler.NewRouter()
 	r.Alerters = cfg.Alerters
