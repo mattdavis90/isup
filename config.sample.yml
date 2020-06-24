@@ -1,9 +1,12 @@
+client:
+  timeout: 5s
+
 schedule:
   jobs:
-    Local:
+    Reqbin:
       interval: 5s
       tests:
-        get:
+        json:
           request:
             url: https://reqbin.com/echo/get/json
           response:
@@ -26,12 +29,17 @@ schedule:
           response:
             extract:
               success: success
-          ok: status_code == 200 && success == "true"
-      ok: get && post
+              value: data.0.value
+              status: data.status
+          ok: status_code == 200 && (success == "true" || (value > 0 && status == "ok"))
+      ok: post && json
+      values:
+        value: 123
 
 alerters:
   Pushover:
     default: true
+    alwayssend: true
     request:
       method: POST
       url: https://api.pushover.net/1/messages.json
@@ -41,6 +49,6 @@ alerters:
         {
           "token": "{{.TOKEN}}",
           "user": "{{.USER_TOKEN}}",
-          "title": "{{.Job}}",
-          "message": "{{.State}}"
+          "title": "{{.job}} - {{.value}}",
+          "message": "{{.state}}"
         }

@@ -17,6 +17,7 @@ type Job struct {
 	Ok       *string
 	Tests    map[string]*Test
 	Alerters []string
+	Values   map[string]string
 }
 
 func (j *Job) Check(validAlerters []string) error {
@@ -67,6 +68,7 @@ func (j *Job) Run(name string, ctx context.Context, alerts chan Alert) {
 			Job:      name,
 			State:    v,
 			Alerters: j.Alerters,
+			Values:   j.Values,
 		}
 
 		select {

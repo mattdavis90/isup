@@ -10,6 +10,7 @@ type Alert struct {
 	Job      string
 	State    bool
 	Alerters []string
+	Values   map[string]string
 }
 
 type Alerter struct {
@@ -49,11 +50,14 @@ func (a *Alerter) Run(name string, ctx context.Context, alerts chan Alert) {
 
 				repl := Replacement{}
 				repl = repl.WithEnv()
-				repl["Job"] = alert.Job
+				repl["job"] = alert.Job
 				if alert.State {
-					repl["State"] = "Ok"
+					repl["state"] = "Ok"
 				} else {
-					repl["State"] = "Alerting"
+					repl["state"] = "Alerting"
+				}
+				for k, v := range alert.Values {
+					repl[k] = v
 				}
 
 				resp, err := a.Request.Run(ctx, &repl)
