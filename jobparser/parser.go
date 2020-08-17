@@ -1,7 +1,6 @@
 package jobparser
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -55,10 +54,10 @@ func (e Expression) Evaluate(r *Values) (bool, error) {
 func (v Variable) Evaluate(r *Values) (bool, error) {
 	res, ok := (*r)[v.Name]
 	if !ok {
-		return false, errors.New(fmt.Sprintf("Test '%s' not found on Job", v.Name))
+		return false, fmt.Errorf("Test '%s' not found on Job", v.Name)
 	}
 	if res {
 		return true, nil
 	}
-	return false, errors.New(fmt.Sprintf("Test '%s' failed", v.Name))
+	return false, fmt.Errorf("Test '%s' failed", v.Name)
 }

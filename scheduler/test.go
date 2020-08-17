@@ -2,7 +2,7 @@ package scheduler
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"isup/testparser"
 )
@@ -11,16 +11,28 @@ type Test struct {
 	Ok       *string
 	Request  *Request
 	Response *Response
+	ok       testparser.Evaluatable
 }
 
 func (t *Test) Check() error {
 	if t.Ok == nil {
-		return errors.New("Test.Ok cannot be empty")
+		return fmt.Errorf("Test.Ok cannot be empty")
 	}
+	tree, err := testparser.Parse("parser", []byte(*t.Ok))
+	if err != nil {
+		return fmt.Errorf("Test.Ok Error: %w", err)
+	}
+	iface, ok := tree.([]interface{})
+	if !ok {
+		return fmt.Errorf("Test.Ok Error: %w", err)
+	} else {
+		t.ok = iface[0].(testparser.Evaluatable)
+	}
+
 	if t.Request == nil {
-		return errors.New("Test.Request is required")
+		return fmt.Errorf("Test.Request is required")
 	}
-	err := t.Request.Check()
+	err = t.Request.Check()
 	if err != nil {
 		return err
 	}
@@ -30,34 +42,23 @@ func (t *Test) Check() error {
 	return t.Response.Check()
 }
 
-func (t *Test) Run(ctx context.Context) (bool, error) {
+func (t *Test) Run(ctx context.Context) (State, error) {
 	rep := Replacement{}
 	rep = rep.WithEnv()
 	resp, err := t.Request.Run(ctx, &rep)
 	if err != nil {
-		return false, err
+		return NoDataState, err
 	}
 	defer resp.Body.Close()
 
 	res, err := t.Response.Run(ctx, resp)
 	if err != nil {
-		return false, err
+		return NoDataState, err
 	}
 
-	tree, err := testparser.Parse("parser", []byte(*t.Ok))
-	if err != nil {
-		return false, err
+	ok, err := t.ok.Evaluate(res)
+	if ok {
+		return OkState, nil
 	}
-
-	iface, ok := tree.([]interface{})
-	if !ok {
-		return false, err
-	} else {
-		expr := iface[0].(testparser.Evaluatable)
-		ok, err := expr.Evaluate(res)
-		if ok {
-			return true, nil
-		}
-		return false, err
-	}
+	return AlertingState, err
 }

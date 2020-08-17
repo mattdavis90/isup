@@ -3,7 +3,6 @@ package scheduler
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -51,7 +50,7 @@ type Request struct {
 
 func (r *Request) Check() error {
 	if r.URL == nil {
-		return errors.New("URL cannot be empty")
+		return fmt.Errorf("URL cannot be empty")
 	}
 	if r.Method == nil {
 		method := "GET"
@@ -61,7 +60,7 @@ func (r *Request) Check() error {
 		r.Method = &method
 	}
 	if !validMethod(*r.Method) {
-		return errors.New(fmt.Sprintf("Method '%s' isn't valid", *r.Method))
+		return fmt.Errorf("Method '%s' isn't valid", *r.Method)
 	}
 	return nil
 }

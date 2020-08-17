@@ -52,7 +52,7 @@ func (c *Config) Reload() (*Config, error) {
 	}
 
 	cfg := &Config{}
-	err = yaml.Unmarshal([]byte(data), cfg)
+	err = yaml.UnmarshalStrict([]byte(data), cfg)
 	if err != nil {
 		return nil, err
 	}

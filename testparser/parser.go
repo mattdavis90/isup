@@ -1,7 +1,6 @@
 package testparser
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -59,7 +58,7 @@ func (e Expression) Evaluate(r *Values) (bool, error) {
 func (c Comparison) Evaluate(r *Values) (bool, error) {
 	v, ok := (*r)[c.Variable]
 	if !ok {
-		return false, errors.New(fmt.Sprintf("Var '%s' not found on test", c.Variable))
+		return false, fmt.Errorf("Var '%s' not found on test", c.Variable)
 	}
 
 	var ret bool
@@ -69,37 +68,37 @@ func (c Comparison) Evaluate(r *Values) (bool, error) {
 		switch c.Comparator {
 		case "==":
 			ret = v.StrValue == c.StrValue
-			err = errors.New(fmt.Sprintf("Test Failed: %s(%s) == %s", c.Variable, v.StrValue, c.StrValue))
+			err = fmt.Errorf("Test Failed: %s(%s) == %s", c.Variable, v.StrValue, c.StrValue)
 		case "!=":
 			ret = v.StrValue != c.StrValue
-			err = errors.New(fmt.Sprintf("Test Failed: %s(%s) != %s", c.Variable, v.StrValue, c.StrValue))
+			err = fmt.Errorf("Test Failed: %s(%s) != %s", c.Variable, v.StrValue, c.StrValue)
 		default:
 			ret = false
-			err = errors.New("Bad Comparator")
+			err = fmt.Errorf("Bad Comparator")
 		}
 	} else {
 		switch c.Comparator {
 		case "==":
 			ret = v.NumValue == c.NumValue
-			err = errors.New(fmt.Sprintf("Test Failed: %s(%f) == %f", c.Variable, v.NumValue, c.NumValue))
+			err = fmt.Errorf("Test Failed: %s(%f) == %f", c.Variable, v.NumValue, c.NumValue)
 		case "!=":
 			ret = v.NumValue != c.NumValue
-			err = errors.New(fmt.Sprintf("Test Failed: %s(%f) != %f", c.Variable, v.NumValue, c.NumValue))
+			err = fmt.Errorf("Test Failed: %s(%f) != %f", c.Variable, v.NumValue, c.NumValue)
 		case ">":
 			ret = v.NumValue > c.NumValue
-			err = errors.New(fmt.Sprintf("Test Failed: %s(%f) > %f", c.Variable, v.NumValue, c.NumValue))
+			err = fmt.Errorf("Test Failed: %s(%f) > %f", c.Variable, v.NumValue, c.NumValue)
 		case ">=":
 			ret = v.NumValue >= c.NumValue
-			err = errors.New(fmt.Sprintf("Test Failed: %s(%f) >= %f", c.Variable, v.NumValue, c.NumValue))
+			err = fmt.Errorf("Test Failed: %s(%f) >= %f", c.Variable, v.NumValue, c.NumValue)
 		case "<":
 			ret = v.NumValue < c.NumValue
-			err = errors.New(fmt.Sprintf("Test Failed: %s(%f) < %f", c.Variable, v.NumValue, c.NumValue))
+			err = fmt.Errorf("Test Failed: %s(%f) < %f", c.Variable, v.NumValue, c.NumValue)
 		case "<=":
 			ret = v.NumValue <= c.NumValue
-			err = errors.New(fmt.Sprintf("Test Failed: %s(%f) <= %f", c.Variable, v.NumValue, c.NumValue))
+			err = fmt.Errorf("Test Failed: %s(%f) <= %f", c.Variable, v.NumValue, c.NumValue)
 		default:
 			ret = false
-			err = errors.New("Bad Comparator")
+			err = fmt.Errorf("Bad Comparator")
 		}
 	}
 

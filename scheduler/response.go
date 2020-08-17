@@ -2,7 +2,7 @@ package scheduler
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -61,7 +61,7 @@ func (r *Response) Run(ctx context.Context, resp *http.Response) (*testparser.Va
 
 			}
 		} else {
-			return nil, errors.New("Unable to parse JSON")
+			return nil, fmt.Errorf("Unable to parse JSON")
 		}
 	}
 

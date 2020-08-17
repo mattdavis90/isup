@@ -8,7 +8,7 @@ import (
 
 type Alert struct {
 	Job      string
-	State    bool
+	State    State
 	Alerters []string
 	Values   map[string]string
 }
@@ -39,7 +39,7 @@ func (a *Alerter) Check() error {
 }
 
 func (a *Alerter) Run(name string, ctx context.Context, alerts chan Alert) {
-	state := make(map[string]bool, 0)
+	state := make(map[string]State, 0)
 
 	for {
 		select {
@@ -51,11 +51,7 @@ func (a *Alerter) Run(name string, ctx context.Context, alerts chan Alert) {
 				repl := Replacement{}
 				repl = repl.WithEnv()
 				repl["job"] = alert.Job
-				if alert.State {
-					repl["state"] = "Ok"
-				} else {
-					repl["state"] = "Alerting"
-				}
+				repl["state"] = alert.State.String()
 				for k, v := range alert.Values {
 					repl[k] = v
 				}
